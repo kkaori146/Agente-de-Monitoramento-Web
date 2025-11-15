@@ -1,0 +1,65 @@
+{
+  "id": null,
+  "title": "Network Agent Dashboard",
+  "tags": ["network", "monitoring"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "RTT Médio (ms)",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, avg_rtt AS value, host AS metric FROM metrics WHERE avg_rtt IS NOT NULL ORDER BY timestamp;",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Perda de Pacotes (%)",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, packet_loss AS value, host AS metric FROM metrics WHERE packet_loss IS NOT NULL ORDER BY timestamp;",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Tempo de Carregamento (s)",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT timestamp AS time, load_time AS value, host AS metric FROM metrics WHERE load_time IS NOT NULL ORDER BY timestamp;",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Último Código HTTP por Host",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT DISTINCT ON (host) host, http_code FROM metrics WHERE http_code IS NOT NULL ORDER BY host, timestamp DESC;",
+          "refId": "D"
+        }
+      ]
+    }
+  ]
+}
