@@ -201,3 +201,11 @@ docker exec -it network-db psql -U postgres -d networkdb
 SELECT * FROM metrics ORDER BY timestamp DESC LIMIT 10;
 ```
 
+----------------------------------------------------------------
+# Repositórios Extras Indicados:
+
+## Projeto com Apache Airflow e Apache Beam
+https://github.com/kkaori146/Engenharia-de-Dados-Teste-Raizen
+
+## Projeto com API
+https://github.com/kkaori146/Project_Airflow_API_CO2
