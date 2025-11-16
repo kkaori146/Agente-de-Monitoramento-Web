@@ -16,16 +16,20 @@ sistema para **monitoramento de desempenho de rede**, incluindo:
 ```
 network-agent/
 ├── agent.py
+├── agent_viaipe.py
 ├── Dockerfile
+├── Dockerfile_viaipe
 ├── docker-compose.yml
 ├── requirements.txt
 └── grafana/
     └── provisioning/
         ├── datasources/
-        │   └── datasource.yml
+        │   ├── datasource.yml
+        │   ├── datasource_viaipe.yml
         └── dashboards/
             ├── dashboard-provider.yml
-            └── network-dashboard.json
+            ├── network-dashboard.json
+            └── viaipe-dashboard.json
 ```
 
 ---
