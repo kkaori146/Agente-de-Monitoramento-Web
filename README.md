@@ -84,10 +84,15 @@ Dashboard: **viaipe-dashboard.json**
 # 🧠 Tecnologias Utilizadas
 
   Camada           Tecnologia
+  
   ---------------- -------------------------
+  
   Coleta           Python 3.11
+  
   Bancos           PostgreSQL 15
+  
   Visualização     Grafana
+  
   Infraestrutura   Docker / Docker Compose
 
 ------------------------------------------------------------------------
