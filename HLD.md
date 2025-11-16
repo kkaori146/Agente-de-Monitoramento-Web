@@ -1,134 +1,131 @@
-# High-Level Design (HLD) - Network Agent
+# High-Level Design (HLD) – Network Agent + ViaIPE Agent
 
 ## 1. Visão Geral
 
-O **Network Agent** é um sistema para coleta, armazenamento e visualização de métricas de rede. Ele é composto por três componentes principais:
+Este sistema é composto por **dois agentes independentes**, cada um responsável por coletar métricas diferentes:
 
-1. **Agente de Coleta**: Um serviço Python que coleta métricas de rede (como RTT, perda de pacotes, status HTTP e tempo de carregamento).
-2. **Banco de Dados PostgreSQL**: Armazena as métricas coletadas.
-3. **Grafana**: Interface de visualização das métricas.
+### **1. Network Agent**
+Coleta métricas de rede:
+- Latência (RTT)
+- Perda de pacotes
+- Tempo de carregamento HTTP
+- Código HTTP
 
-O objetivo principal do sistema é monitorar a performance de hosts e serviços, fornecendo dashboards e métricas históricas para análise.
+### **2. ViaIPE Agent**
+Coleta métricas de clientes do ViaIPE:
+- Disponibilidade
+- Consumo de banda
+
+Cada agente envia os dados para bancos PostgreSQL separados.  
+O Grafana exibe dashboards automáticos a partir desses bancos.
 
 ---
 
 ## 2. Componentes do Sistema
 
-### 2.1 Network Agent (Python)
-- Linguagem: Python 3.x
-- Responsável por:
-  - Coletar métricas de rede via ICMP e HTTP.
-  - Enviar dados para o PostgreSQL.
-  - Operar em container Docker.
-- Arquivo principal: `agent.py`
+### **2.1 Network Agent (Python)**
 
-### 2.2 Banco de Dados (PostgreSQL)
-- Armazena métricas em uma tabela chamada `metrics`.
-- Estrutura da tabela:
+Arquivo: `agent.py`  
+Responsabilidades:
+- Envia pings periódicos
+- Executa testes HTTP
+- Insere métricas no banco `networkdb`
 
-| Coluna       | Tipo                        | Descrição                   |
-|------------- |---------------------------- |---------------------------- |
-| id           | integer                     | Identificador único        |
-| host         | text                        | Host monitorado            |
-| timestamp    | timestamp without time zone | Momento da coleta          |
-| avg_rtt      | double precision            | Latência média             |
-| packet_loss  | double precision            | Percentual de perda        |
-| http_code    | integer                     | Código HTTP da resposta    |
-| load_time    | double precision            | Tempo de carregamento HTTP |
+**Estrutura da tabela `metrics`:**
 
-- Container Docker: `network-db`
-- Porta: `5432`
+| Coluna       | Tipo       |
+|--------------|------------|
+| id           | SERIAL     |
+| host         | TEXT       |
+| timestamp    | TIMESTAMP  |
+| avg_rtt      | FLOAT      |
+| packet_loss  | FLOAT      |
+| http_code    | INT        |
+| load_time    | FLOAT      |
 
-### 2.3 Grafana
-- Ferramenta de visualização de dashboards.
-- Conectado ao PostgreSQL como fonte de dados.
-- Container Docker: `network-agent-grafana-1`
-- Porta: `3000`
-- Dashboards configurados:
-  - `network-dashboard`
-- Datasource configurado: `Postgres (networkdb)`
+---
+
+### **2.2 ViaIPE Agent (Python)**
+
+Arquivo: `agent_viaipe.py`  
+Responsabilidades:
+- Coletas de disponibilidade
+- Consumo de banda
+- Inserção no banco `viaipe_db`
+
+**Estrutura da tabela `viaipe_metrics`:**
+
+| Coluna         | Tipo       |
+|----------------|------------|
+| id             | SERIAL     |
+| client         | TEXT       |
+| timestamp      | TIMESTAMP  |
+| availability   | FLOAT      |
+| avg_bandwidth  | FLOAT      |
+
+---
+
+### **2.3 Bancos PostgreSQL**
+
+Dois bancos separados:
+
+| Serviço | Banco         | Tabela            |
+|--------|---------------|--------------------|
+| Network Agent | `networkdb` | `metrics` |
+| ViaIPE Agent | `viaipe_db` | `viaipe_metrics` |
+
+---
+
+### **2.4 Grafana**
+
+- Porta: **3000**
+- Provisionamento automático
+- Dashboards:
+  - `network-dashboard.json`
+  - `viaipe-dashboard.json`
+- Datasources:
+  - PostgreSQL – Network
+  - PostgreSQL – ViaIPE
 
 ---
 
 ## 3. Fluxo de Dados
 
-1. O **agente Python** coleta métricas de cada host.
-2. As métricas são enviadas para a tabela `metrics` do **PostgreSQL**.
-3. O **Grafana** consulta o PostgreSQL e gera visualizações em dashboards.
-4. Usuários acessam dashboards via navegador.
+[ Network Agent ] ---> [ PostgreSQL networkdb ] ---> [ Grafana ] ---> Usuário
 
-```text
-[ Network Agent ] --> [ PostgreSQL ] --> [ Grafana ] --> [ Usuário ]
-```
+[ ViaIPE Agent ] ---> [ PostgreSQL viaipe_db ] ---> [ Grafana ] ---> Usuário
+
 
 ---
 
-## 4. Infraestrutura (Docker Compose)
+## 4. Infraestrutura Docker
 
-```yaml
-version: '3'
+Todos os serviços são orquestrados por Docker Compose:
 
-services:
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: networkdb
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  grafana:
-    image: grafana/grafana
-    depends_on:
-      - db
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning
-    restart: always
-
-  agent:
-    image: network-agent-agent
-    depends_on:
-      - db
-    restart: always
-```
+- 2 bancos PostgreSQL
+- 2 agentes Python
+- Grafana com provisioning automático
+- Volumes persistentes para bancos
+- Reinício automático (`restart: always`)
 
 ---
 
 ## 5. Segurança e Configurações
 
-- Senha do PostgreSQL: `postgres` (padrão, recomendado alterar)
-- SSL desabilitado no datasource do Grafana (`sslmode: disable`)
-- Acesso ao Grafana configurado via proxy.
+Credenciais padrão do PostgreSQL (recomendado mudar)
+
+Sem SSL (rede interna Docker)
+
+Volumes persistentes
+
+Grafana provisionado automaticamente via JSON e YAML
 
 ---
 
-## 6. Considerações de Alto Nível
+## 6. Referências
 
-- O sistema é **modular**: cada componente roda isoladamente via Docker.
-- Pode ser facilmente expandido para múltiplos agentes e hosts.
-- Dashboards podem ser provisionados automaticamente via YAML.
-- Coleta de métricas pode ser agendada via CRON ou loop contínuo no container do agente.
+Documentação do PostgreSQL
 
----
+Documentação do Grafana
 
-## 7. Possíveis Extensões
-
-- Adição de alertas no Grafana para métricas críticas.
-- Suporte a TimescaleDB para métricas históricas otimizadas.
-- Integração com Prometheus ou outros sistemas de monitoramento.
-
----
-
-## 8. Referências
-
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [Grafana Documentation](https://grafana.com/docs/)
-- [Docker Documentation](https://docs.docker.com/)
+Documentação do Docker

@@ -1,80 +1,97 @@
-# 📡 Network Agent – Monitoramento de Rede com Docker, PostgreSQL e Grafana
+# 📡 Network Agent + ViaIpe --- Monitoramento Completo (Docker, PostgreSQL e Grafana)
 
-sistema para **monitoramento de desempenho de rede**, incluindo:
+🔄 Coleta automática periódica via agentes Python
+📶 Testes de ping, RTT, perda de pacotes
+🌍 Testes HTTP
+🌐 Coleta oficial da API ViaIpe (RNP)
+🧮 Cálculo de disponibilidade, banda média e qualidade dos clientes ViaIpe
+🗄️ Armazenamento em dois bancos independentes (networkdb e viaipe_db)
+📊 Dashboards automatizados no Grafana
+🐳 Arquitetura 100% em Docker Compose
 
-- 🔄 **Coleta automática periódica** via agente Python
-- 📶 Testes de rede (ping, latência, perda de pacotes)
-- 🌍 Testes HTTP (tempo de carregamento e códigos de resposta)
-- 🗄️ Armazenamento em banco PostgreSQL
-- 📊 Visualização no Grafana com dashboards provisionados
-- 🐳 orquestração realizado 100% com Docker Compose
+------------------------------------------------------------------------
 
----
+## 📁 Estrutura do Projeto
 
-## 📁 Estrutura do Repositório
+    network-agent/
+    ├── agent.py
+    ├── agent_viaipe.py
+    ├── Dockerfile
+    ├── Dockerfile_viaipe
+    ├── docker-compose.yml
+    ├── requirements.txt
+    └── grafana/
+        └── provisioning/
+            ├── datasources/
+            │   ├── datasource.yml
+            │   ├── datasource_viaipe.yml
+            └── dashboards/
+                ├── dashboard-provider.yml
+                ├── network-dashboard.json
+                └── viaipe-dashboard.json
 
-```
-network-agent/
-├── agent.py
-├── agent_viaipe.py
-├── Dockerfile
-├── Dockerfile_viaipe
-├── docker-compose.yml
-├── requirements.txt
-└── grafana/
-    └── provisioning/
-        ├── datasources/
-        │   ├── datasource.yml
-        │   ├── datasource_viaipe.yml
-        └── dashboards/
-            ├── dashboard-provider.yml
-            ├── network-dashboard.json
-            └── viaipe-dashboard.json
-```
+------------------------------------------------------------------------
 
----
+# 🎯 Objetivos do Sistema
 
-## 🚀 Objetivo do Projeto
+O sistema possui **duas coletas independentes**, cada uma com seu
+próprio banco e dashboard:
 
-Construir uma solução simples e portátil para monitoramento de rede capaz de:
+------------------------------------------------------------------------
 
-- Medir conectividade com hosts externos
-- Armazenar as métricas em banco de dados
-- Exibir dashboards automaticamente no Grafana
-- Funcionar em qualquer ambiente via Docker
+## 🟦 1. Network Agent (Monitoramento de Rede)
 
-Hosts monitorados:
+O agente realiza periodicamente:
 
-- `google.com`
-- `youtube.com`
-- `rnp.br`
+-   Ping\
+-   Latência média (RTT)\
+-   Perda de pacotes\
+-   Testes HTTP (status e tempo de carregamento)
 
----
+Os resultados são inseridos na tabela `metrics` no banco `networkdb`.
 
-## 🧠 Tecnologias Utilizadas
+Dashboard: **network-dashboard.json**
 
-| Camada | Tecnologia |
-|--------|------------|
-| Coleta de dados | Python 3.11 |
-| Banco de dados | PostgreSQL 15 |
-| Visualização | Grafana |
-| Infraestrutura | Docker & Docker Compose |
+------------------------------------------------------------------------
 
----
+## 🟩 2. ViaIpe Agent (Coleta Oficial API RNP)
 
-## 🧱 Componentes
+O agente acessa:
 
-### 🔹 **Agent (Python)**
-Realiza periodicamente:
-- Ping (média RTT e % perda)
-- Requisição HTTP + tempo de resposta + status HTTP
+    https://legadoviaipe.rnp.br/api/norte
 
-Valores são inseridos na tabela `metrics` no PostgreSQL.
+E gera métricas por cliente:
 
-### 🔹 **PostgreSQL**
-Estrutura da tabela:
+-   Disponibilidade\
+-   Qualidade (normalizada em 0--100)\
+-   Banda média (Mbps)\
+-   Registro por timestamp
 
-```sql
+Os resultados são armazenados na tabela `viaipe_metrics` no banco
+`viaipe_db`.
+
+Dashboard: **viaipe-dashboard.json**
+
+------------------------------------------------------------------------
+
+# 🧠 Tecnologias Utilizadas
+
+  Camada           Tecnologia
+  ---------------- -------------------------
+  Coleta           Python 3.11
+  Bancos           PostgreSQL 15
+  Visualização     Grafana
+  Infraestrutura   Docker / Docker Compose
+
+------------------------------------------------------------------------
+
+# 🧱 Estrutura das Tabelas
+
+------------------------------------------------------------------------
+
+## 📌 Tabela `metrics` (Network Agent)
+
+``` sql
 CREATE TABLE IF NOT EXISTS metrics (
   id SERIAL PRIMARY KEY,
   host TEXT,
@@ -86,130 +103,162 @@ CREATE TABLE IF NOT EXISTS metrics (
 );
 ```
 
-### 🔹 **Grafana**
-- Datasource provisionado automaticamente
-- Dashboard criado via JSON
-- Nenhuma configuração manual necessária
+------------------------------------------------------------------------
 
-Acesse em:
+## 📌 Tabela `viaipe_metrics` (ViaIpe Agent)
+
+``` sql
+CREATE TABLE IF NOT EXISTS viaipe_metrics (
+  id SERIAL PRIMARY KEY,
+  client TEXT,
+  timestamp TIMESTAMP,
+  availability FLOAT,
+  avg_bandwidth FLOAT,
+  quality FLOAT
+);
 ```
-http://localhost:3000
-```
 
-Login:  
-`admin / admin`
+------------------------------------------------------------------------
 
----
+# 🖥️ Grafana (Provisionado Automaticamente)
 
-## 🛠 Pré-requisitos
+Acesse:
 
-- Docker Desktop instalado
-- Docker Compose
+    http://localhost:3000
 
----
+Login:
 
-# ▶️ Como Rodar o Projeto
+    admin
+    admin
+
+Dashboards carregam automaticamente via:
+
+    grafana/provisioning/dashboards/
+    grafana/provisioning/datasources/
+
+Nenhuma configuração manual é necessária.
+
+------------------------------------------------------------------------
+
+# 🛠 Pré-requisitos
+
+-   Docker\
+-   Docker Compose
+
+------------------------------------------------------------------------
+
+# ▶️ Como Executar
 
 ### 1️⃣ Clonar o repositório
-```bash
+
+``` bash
 git clone <url>
 cd network-agent
 ```
 
-### 2️⃣ Subir os containers
-```bash
+### 2️⃣ Subir os serviços
+
+``` bash
 docker compose up --build -d
 ```
 
-### 3️⃣ Verificar que os serviços estão rodando
-```bash
+### 3️⃣ Verificar contêineres
+
+``` bash
 docker ps
 ```
 
-### 4️⃣ Acessar o Grafana
-```
-http://localhost:3000
-```
+### 4️⃣ Abrir o Grafana
 
-Login: **admin / admin**
+    http://localhost:3000
 
----
+------------------------------------------------------------------------
 
 # ⚙️ Variáveis de Ambiente
 
-### Agent
-| Variável | Descrição | Default |
-|----------|-----------|---------|
-| `DB_HOST` | Host do Postgres | db |
-| `DB_NAME` | Nome do banco | networkdb |
-| `DB_USER` | Usuário | postgres |
-| `DB_PASS` | Senha | postgres |
-| `INTERVAL` | Intervalo de coleta (s) | 60 |
+## Network Agent
 
-### PostgreSQL
-- `POSTGRES_USER`
-- `POSTGRES_PASSWORD`
-- `POSTGRES_DB`
+  Variável   Default
+  ---------- -----------
+  DB_HOST    db
+  DB_NAME    networkdb
+  DB_USER    postgres
+  DB_PASS    postgres
+  INTERVAL   60
 
----
+## ViaIpe Agent
 
-# 📈 Dashboard
+  Variável   Default
+  ---------- -----------
+  DB_HOST    db_viaipe
+  DB_NAME    viaipe_db
+  DB_USER    postgres
+  DB_PASS    postgres
+  INTERVAL   60
 
-O dashboard mostra:
+------------------------------------------------------------------------
 
-- Latência média por host
-- Perda de pacotes
-- Tempo HTTP
-- Últimos códigos de retorno por site
+# 📊 Queries Úteis
 
-A query usada nos gráficos:
+## 🔹 Verificar pasta de Queries do Projeto
 
-```sql
-SELECT
-  timestamp AS "time",
-  avg_rtt
-FROM metrics
-WHERE $__timeFilter(timestamp)
-ORDER BY timestamp;
-```
-
----
+------------------------------------------------------------------------
 
 # 🧰 Comandos Úteis
 
-### Logs
-```bash
+## Logs
+
+``` bash
 docker compose logs -f agent
-docker compose logs -f db
+docker compose logs -f agent_viaipe
 docker compose logs -f grafana
 ```
 
-### Restart
-```bash
+## Reiniciar
+
+``` bash
 docker compose down
 docker compose up --build -d
 ```
 
-### Acessar banco
-```bash
+## Acessar banco --- Network
+
+``` bash
 docker exec -it network-db psql -U postgres -d networkdb
 ```
 
-### Ver tabela
-```sql
-\dt
+## Acessar banco --- ViaIpe
+
+``` bash
+docker exec -it network-db-viaipe psql -U postgres -d viaipe_db
 ```
 
-### Ver dados
-```sql
+## Ver tabelas
+
+    \dt
+
+## Últimos registros
+
+Network:
+
+``` sql
 SELECT * FROM metrics ORDER BY timestamp DESC LIMIT 10;
 ```
 
-----------------------------------------------------------------
-# Repositórios Extras Indicados:
+ViaIpe:
 
-## Projeto com Apache Airflow e Apache Beam
+``` sql
+SELECT * FROM viaipe_metrics ORDER BY timestamp DESC LIMIT 10;
+```
+
+------------------------------------------------------------------------
+
+# 📚 Outros Repositórios
+
+### Apache Airflow + Beam
+
 https://github.com/kkaori146/Engenharia-de-Dados-Teste-Raizen
 
-## Projeto com API
+### Projeto API CO₂
+
 https://github.com/kkaori146/Project_Airflow_API_CO2
