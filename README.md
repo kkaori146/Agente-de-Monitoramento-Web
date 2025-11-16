@@ -1,12 +1,19 @@
 # 📡 Network Agent + ViaIpe --- Monitoramento Completo (Docker, PostgreSQL e Grafana)
 
 🔄 Coleta automática periódica via agentes Python
+
 📶 Testes de ping, RTT, perda de pacotes
+
 🌍 Testes HTTP
+
 🌐 Coleta oficial da API ViaIpe (RNP)
+
 🧮 Cálculo de disponibilidade, banda média e qualidade dos clientes ViaIpe
+
 🗄️ Armazenamento em dois bancos independentes (networkdb e viaipe_db)
+
 📊 Dashboards automatizados no Grafana
+
 🐳 Arquitetura 100% em Docker Compose
 
 ------------------------------------------------------------------------
