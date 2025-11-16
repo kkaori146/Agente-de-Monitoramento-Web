@@ -50,9 +50,12 @@ próprio banco e dashboard:
 
 O agente realiza periodicamente:
 
--   Ping\
--   Latência média (RTT)\
--   Perda de pacotes\
+-   Ping
+  
+-   Latência média (RTT)
+  
+-   Perda de pacotes
+  
 -   Testes HTTP (status e tempo de carregamento)
 
 Os resultados são inseridos na tabela `metrics` no banco `networkdb`.
