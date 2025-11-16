@@ -189,36 +189,28 @@ docker ps
 # ⚙️ Variáveis de Ambiente
 
 ## Network Agent
-
-  Variável   Default
   
-  ---------- -----------
+  DB_HOST: db
   
-  DB_HOST    db
+  DB_NAME: networkdb
   
-  DB_NAME    networkdb
+  DB_USER: postgres
   
-  DB_USER    postgres
+  DB_PASS: postgres
   
-  DB_PASS    postgres
-  
-  INTERVAL   60
+  INTERVAL: 60
 
 ## ViaIpe Agent
 
-  Variável   Default
+  DB_HOST: db_viaipe
   
-  ---------- -----------
+  DB_NAME: viaipe_db
   
-  DB_HOST    db_viaipe
+  DB_USER: postgres
   
-  DB_NAME    viaipe_db
+  DB_PASS: postgres
   
-  DB_USER    postgres
-  
-  DB_PASS    postgres
-  
-  INTERVAL   60
+  INTERVAL: 60
 
 ------------------------------------------------------------------------
 
