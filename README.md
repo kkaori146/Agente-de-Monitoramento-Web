@@ -274,10 +274,10 @@ SELECT * FROM viaipe_metrics ORDER BY timestamp DESC LIMIT 10;
 
 # 📚 Outros Repositórios
 
-### Apache Airflow + Beam
+### Projeto Desafio Raízen com Apache Airflow e Apache Beam
 
 https://github.com/kkaori146/Engenharia-de-Dados-Teste-Raizen
 
-### Projeto API CO₂
+### Projeto API CO₂ com Apache Airflow
 
 https://github.com/kkaori146/Project_Airflow_API_CO2
