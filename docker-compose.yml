@@ -1,5 +1,9 @@
-services:
+version: "3.9"
 
+services:
+  # ------------------------
+  # Banco principal
+  # ------------------------
   db:
     image: postgres:15
     container_name: network-db
@@ -18,8 +22,13 @@ services:
       timeout: 5s
       retries: 10
 
+  # ------------------------
+  # Agent principal (ping + HTTP)
+  # ------------------------
   agent:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
       db:
         condition: service_healthy
@@ -28,11 +37,15 @@ services:
       DB_NAME: networkdb
       DB_USER: postgres
       DB_PASS: postgres
-      INTERVAL: 60   # segundos
+      INTERVAL: 60
     restart: always
 
+  # ------------------------
+  # Grafana
+  # ------------------------
   grafana:
     image: grafana/grafana
+    container_name: network-agent-grafana
     ports:
       - "3000:3000"
     depends_on:
@@ -41,7 +54,45 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning
     restart: always
 
+  # ------------------------
+  # Banco de dados ViaIpe
+  # ------------------------
+  db_viaipe:
+    image: postgres:15
+    container_name: network-db-viaipe
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: viaipe_db
+    volumes:
+      - db_viaipe_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ------------------------
+  # Agent ViaIpe
+  # ------------------------
+  agent_viaipe:
+    build:
+      context: .
+      dockerfile: Dockerfile_viaipe
+    depends_on:
+      db_viaipe:
+        condition: service_healthy
+    environment:
+      DB_HOST: db_viaipe
+      DB_NAME: viaipe_db
+      DB_USER: postgres
+      DB_PASS: postgres
+      INTERVAL: 60
+    restart: always
+
 volumes:
   db_data:
-
-
+  db_viaipe_data:

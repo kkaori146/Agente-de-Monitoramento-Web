@@ -1,21 +1,21 @@
 apiVersion: 1
 
 datasources:
-  - name: Postgres
+  - name: ViaIpe
     type: postgres
     access: proxy
-    isDefault: true
+    isDefault: false
     editable: true
     readOnly: false
 
-    url: db:5432
+    url: db_viaipe:5432
 
     user: postgres
     secureJsonData:
       password: postgres
       
     jsonData:
-      database: networkdb
+      database: viaipe_db
       sslmode: "disable"
       postgresVersion: 1500
       timescaledb: false

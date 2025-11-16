@@ -1,7 +1,7 @@
 {
   "id": null,
-  "title": "Network Agent Dashboard",
-  "tags": ["network", "monitoring"],
+  "title": "ViaIpe Dashboard",
+  "tags": ["viaipe", "monitoring"],
   "timezone": "browser",
   "schemaVersion": 39,
   "version": 1,
@@ -9,56 +9,56 @@
   "panels": [
     {
       "type": "timeseries",
-      "title": "RTT Médio (ms)",
-      "datasource": "Postgres",
+      "title": "Disponibilidade Média (%)",
+      "datasource": "ViaIpe",
       "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
       "targets": [
         {
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT timestamp AS time, avg_rtt AS value, host AS metric FROM metrics WHERE avg_rtt IS NOT NULL ORDER BY timestamp;",
+          "rawSql": "SELECT timestamp AS time, availability AS value, client AS metric FROM viaipe_metrics ORDER BY timestamp;",
           "refId": "A"
         }
       ]
     },
     {
       "type": "timeseries",
-      "title": "Perda de Pacotes (%)",
-      "datasource": "Postgres",
+      "title": "Consumo de Banda Médio (Mbps)",
+      "datasource": "ViaIpe",
       "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
       "targets": [
         {
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT timestamp AS time, packet_loss AS value, host AS metric FROM metrics WHERE packet_loss IS NOT NULL ORDER BY timestamp;",
+          "rawSql": "SELECT timestamp AS time, avg_bandwidth AS value, client AS metric FROM viaipe_metrics ORDER BY timestamp;",
           "refId": "B"
         }
       ]
     },
     {
       "type": "timeseries",
-      "title": "Tempo de Carregamento (s)",
-      "datasource": "Postgres",
+      "title": "Qualidade Média",
+      "datasource": "ViaIpe",
       "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
       "targets": [
         {
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT timestamp AS time, load_time AS value, host AS metric FROM metrics WHERE load_time IS NOT NULL ORDER BY timestamp;",
+          "rawSql": "SELECT timestamp AS time, quality AS value, client AS metric FROM viaipe_metrics ORDER BY timestamp;",
           "refId": "C"
         }
       ]
     },
     {
       "type": "stat",
-      "title": "Último Código HTTP por Host",
-      "datasource": "Postgres",
+      "title": "Últimos Clientes Monitorados",
+      "datasource": "ViaIpe",
       "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
       "targets": [
         {
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT DISTINCT ON (host) host, http_code FROM metrics WHERE http_code IS NOT NULL ORDER BY host, timestamp DESC;",
+          "rawSql": "SELECT DISTINCT ON (client) client, availability, avg_bandwidth, quality FROM viaipe_metrics ORDER BY client, timestamp DESC;",
           "refId": "D"
         }
       ]
